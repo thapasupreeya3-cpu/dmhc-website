@@ -327,6 +327,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--teal-deep)}
 .form-actions{display:flex;flex-wrap:wrap;gap:.9rem;align-items:center;margin-top:1.2rem}
 .form-ok{display:none;background:var(--mint);border:2px solid var(--teal);border-radius:12px;padding:1.2rem 1.4rem;margin-top:1.4rem}
 .form-ok.show{display:block}
+.form-fail{display:none;background:#FDECEE;border:2px solid var(--crimson);border-radius:12px;padding:1.2rem 1.4rem;margin-top:1.4rem}
+.form-fail.show{display:block}
+.form-fail h3{color:var(--crimson-deep);margin-top:0}
+.btn[aria-busy="true"]{opacity:.75;cursor:progress}
 /* download tiles */
 .dl-row{display:grid;gap:1rem;margin:1.2rem 0}
 @media(min-width:700px){.dl-row{grid-template-columns:1fr 1fr}}
@@ -1184,13 +1188,18 @@ html[data-contrast="high"] .site-footer a:hover{color:#fff}
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn btn-accent">Send referral by email</button>
+          <button type="submit" class="btn btn-accent" id="refSend">Send referral</button>
           <button type="button" class="btn btn-ghost" id="refCopy">Copy referral details instead</button>
         </div>
-        <p class="hint" style="margin-top:.9rem;font-size:.92rem;color:var(--ink-soft)">Sending opens your email program with the referral written for you — this website does not store or transmit your details itself. Please avoid including sensitive health details here; we'll collect anything needed securely later.</p>
+        <p class="hint" style="margin-top:.9rem;font-size:.92rem;color:var(--ink-soft)">Your referral is sent straight to our team over a secure connection. It is emailed to us and is not stored on this website. Please avoid including sensitive health details here; we'll collect anything needed securely later.</p>
         <div class="form-ok" id="refOk" tabindex="-1">
-          <h3>Thank you — nearly done!</h3>
-          <p style="margin:0" id="refOkMsg">Your email program should now be open with the referral ready to send. If it didn't open, use the "Copy referral details" button and paste them into an email to <a href="mailto:info@dmhcare.com.au">info@dmhcare.com.au</a>.</p>
+          <h3>Thank you — your referral has been sent.</h3>
+          <p style="margin:0" id="refOkMsg">It has arrived with our team and we'll be in touch within one business day. If you'd like a copy for your own records, use the "Copy referral details" button below.</p>
+        </div>
+        <div class="form-fail" id="refFail" tabindex="-1" role="alert">
+          <h3>We couldn't send that automatically.</h3>
+          <p>Nothing has been lost. Please use the button below to copy the referral, then paste it into an email to <a href="mailto:info@dmhcare.com.au">info@dmhcare.com.au</a>. You are also very welcome to call us on <a href="tel:+61488114368">0488 114 368</a> and we'll take the details over the phone.</p>
+          <button type="button" class="btn btn-ghost" id="refCopy2">Copy referral details</button>
         </div>
       </form>
     </div>
@@ -1287,10 +1296,15 @@ html[data-contrast="high"] .site-footer a:hover{color:#fff}
               <div class="f-field" data-name="Message"><label for="ct-msg">Your message <span class="req" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label><textarea id="ct-msg" required></textarea><span class="f-error" id="ct-msg-err">Please write a short message.</span></div>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary">Send message by email</button>
+              <button type="submit" class="btn btn-primary" id="ctSend">Send message</button>
             </div>
-            <p class="hint" style="margin-top:.9rem;font-size:.92rem;color:var(--ink-soft)">This opens your email program with the message written for you — nothing is stored on this website.</p>
-            <div class="form-ok" id="ctOk" tabindex="-1"><h3>Thank you!</h3><p style="margin:0">Your email program should now be open with your message ready to send.</p></div>
+            <p class="hint" style="margin-top:.9rem;font-size:.92rem;color:var(--ink-soft)">Your message is sent straight to our team over a secure connection. It is emailed to us and is not stored on this website.</p>
+            <div class="form-ok" id="ctOk" tabindex="-1"><h3>Thank you — your message has been sent.</h3><p style="margin:0">It has arrived with our team and we'll reply within one business day.</p></div>
+            <div class="form-fail" id="ctFail" tabindex="-1" role="alert">
+              <h3>We couldn't send that automatically.</h3>
+              <p style="margin:0 0 .9rem">Nothing has been lost. Please email us at <a href="mailto:info@dmhcare.com.au">info@dmhcare.com.au</a> or call <a href="tel:+61488114368">0488 114 368</a> — we'd genuinely rather hear from you than have you give up here.</p>
+              <button type="button" class="btn btn-ghost" id="ctCopy">Copy my message</button>
+            </div>
           </form>
         </div>
         <div>
@@ -1800,31 +1814,83 @@ html[data-contrast="high"] .site-footer a:hover{color:#fff}
       document.body.removeChild(ta);done();
     }
   }
+  function looksLikeEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);}
+
+  function postForm(payload,o){
+    var btn=o.btn;
+    o.ok.classList.remove("show");o.fail.classList.remove("show");
+    var label=btn?btn.textContent:"";
+    function busy(on){
+      if(!btn){return;}
+      btn.disabled=on;
+      if(on){btn.setAttribute("aria-busy","true");btn.textContent="Sending…";}
+      else{btn.removeAttribute("aria-busy");btn.textContent=label;}
+    }
+    function failed(){busy(false);o.fail.classList.add("show");o.fail.focus();}
+    function sent(){busy(false);o.ok.classList.add("show");o.ok.focus();}
+    if(!window.fetch){failed();return;}
+    busy(true);
+    var ctl=("AbortController" in window)?new AbortController():null;
+    var timer=setTimeout(function(){if(ctl){ctl.abort();}},20000);
+    fetch("/api/send",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload),
+      signal:ctl?ctl.signal:undefined
+    }).then(function(r){
+      return r.text().then(function(t){
+        var d={};try{d=JSON.parse(t);}catch(e){}
+        return {status:r.status,data:d};
+      });
+    }).then(function(res){
+      clearTimeout(timer);
+      if(res.status===200&&res.data&&res.data.ok===true){sent();}else{failed();}
+    })["catch"](function(){clearTimeout(timer);failed();});
+  }
+
   var refForm=$("#refForm");
   if(refForm){
     refForm.addEventListener("submit",function(e){
       e.preventDefault();
       if(!validate(refForm,"refErrors","refErrorList")){return;}
-      var subject="New referral — "+val("rf-fname")+" "+val("rf-lname");
-      var href="mailto:info@dmhcare.com.au?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(referralBody());
-      $("#refOk").classList.add("show");$("#refOk").focus();
-      window.location.href=href;
+      var reply=val("rf-email")||val("rf-ref-email")||val("rf-rep-email");
+      postForm({
+        form:"referral",
+        website:"",
+        subject:"New referral - "+val("rf-fname")+" "+val("rf-lname"),
+        text:referralBody(),
+        reply_to:looksLikeEmail(reply)?reply:""
+      },{btn:$("#refSend"),ok:$("#refOk"),fail:$("#refFail")});
     });
-    $("#refCopy").addEventListener("click",function(){
+    function copyReferral(){
       if(!validate(refForm,"refErrors","refErrorList")){return;}
       copyText(referralBody(),$("#refOk"),"The referral details are copied to your clipboard. Paste them into an email to info@dmhcare.com.au and press send.");
-    });
+    }
+    $("#refCopy").addEventListener("click",copyReferral);
+    var refCopy2=$("#refCopy2");
+    if(refCopy2){refCopy2.addEventListener("click",function(){
+      copyText(referralBody(),$("#refFail"),null);
+    });}
   }
+
   var ctForm=$("#ctForm");
   if(ctForm){
     ctForm.addEventListener("submit",function(e){
       e.preventDefault();
       if(!validate(ctForm,"ctErrors","ctErrorList")){return;}
-      var body="Name: "+val("ct-name")+"\nContact: "+val("ct-contact")+"\n\n"+val("ct-msg");
-      var href="mailto:info@dmhcare.com.au?subject="+encodeURIComponent("Website enquiry from "+val("ct-name"))+"&body="+encodeURIComponent(body);
-      $("#ctOk").classList.add("show");$("#ctOk").focus();
-      window.location.href=href;
+      var contact=val("ct-contact");
+      postForm({
+        form:"contact",
+        website:"",
+        subject:"Website enquiry from "+val("ct-name"),
+        text:"Name: "+val("ct-name")+"\nContact: "+contact+"\n\n"+val("ct-msg"),
+        reply_to:looksLikeEmail(contact)?contact:""
+      },{btn:$("#ctSend"),ok:$("#ctOk"),fail:$("#ctFail")});
     });
+    var ctCopy=$("#ctCopy");
+    if(ctCopy){ctCopy.addEventListener("click",function(){
+      copyText("Name: "+val("ct-name")+"\nContact: "+val("ct-contact")+"\n\n"+val("ct-msg"),$("#ctFail"),null);
+    });}
   }
 })();
 </script>
