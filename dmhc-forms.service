@@ -1,0 +1,37 @@
+[Unit]
+Description=DMHC website form handler
+Documentation=https://dmhcare.com.au
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+EnvironmentFile=/etc/dmhc-forms.env
+ExecStart=/usr/bin/python3 /var/www/dmhcare/server/dmhc-forms.py
+Restart=always
+RestartSec=5
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+
+# Hardening. This service only needs to read its own script, resolve DNS and
+# make an outbound TLS connection to the mail server.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+# AF_UNIX is needed as well as the internet families: on Ubuntu, name lookups
+# can go through a local socket, and without it DNS for the mail server fails.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
