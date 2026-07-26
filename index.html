@@ -530,75 +530,48 @@ html.js .linefig svg.lf-roll.go .lf-glide{animation:lfGlide 3.9s cubic-bezier(.2
 @keyframes ringSpin{from{stroke-dashoffset:0}to{stroke-dashoffset:-18}}
 
 .hero-art.playing .hero-arc.a1{animation:drawArc .85s cubic-bezier(.3,.7,.3,1) 1.15s both}
-@keyframes drawArc{from{stroke-dasharray:521;stroke-dashoffset:521}to{stroke-dasharray:521;stroke-dashoffset:0}}
+@keyframes drawArc{from{stroke-dasharray:432;stroke-dashoffset:432}to{stroke-dasharray:432;stroke-dashoffset:0}}
 
-/* ---- the two badges ----
-   Their base position is an attribute on the group, so every keyframe
-   has to restate it: the moment CSS takes over the transform, the
-   attribute stops applying and an unstated translate means the origin. */
-.hero-art.playing .chip-heart{animation:chipInA .85s cubic-bezier(.2,.9,.35,1.15) 1.05s both,floatA 7.5s ease-in-out 2s infinite}
-.hero-art.playing .chip-mind {animation:chipInB .85s cubic-bezier(.2,.9,.35,1.15) 1.75s both,floatB 8.6s ease-in-out 2.9s infinite}
-.hero-art.played  .chip-heart{animation:floatA 7.5s ease-in-out infinite}
-.hero-art.played  .chip-mind {animation:floatB 8.6s ease-in-out infinite}
-@keyframes chipInA{
-  from{opacity:0;transform:translate(110px,92px) scale(.55)}
-  62%{opacity:1;transform:translate(110px,141px) scale(1.06)}
-  to{opacity:1;transform:translate(110px,134px) scale(1)}
-}
-@keyframes chipInB{
-  from{opacity:0;transform:translate(620px,90px) scale(.55)}
-  62%{opacity:1;transform:translate(620px,139px) scale(1.06)}
-  to{opacity:1;transform:translate(620px,132px) scale(1)}
-}
-@keyframes floatA{0%,100%{transform:translate(110px,134px)}50%{transform:translate(110px,127px)}}
-@keyframes floatB{0%,100%{transform:translate(620px,132px)}50%{transform:translate(620px,139px)}}
 
-/* the dashed rims turn against each other, one full turn every half minute */
-.chip-rim{transform-box:fill-box;transform-origin:center}
-.hero-art.playing .chip-heart .chip-rim,.hero-art.played .chip-heart .chip-rim{animation:rimCW 26s linear infinite}
-.hero-art.playing .chip-mind  .chip-rim,.hero-art.played .chip-mind  .chip-rim{animation:rimCCW 31s linear infinite}
-@keyframes rimCW{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-@keyframes rimCCW{from{transform:rotate(0)}to{transform:rotate(-360deg)}}
+/* ---- the mark ----
+   The logo's own heart-and-mind, lifted onto the picture at 0.57 scale.
+   em-fit does the sizing and puts the mark's centre on the group's origin,
+   so every animation below can talk in whole art units and ignore the
+   logo's coordinate space entirely.
+
+   The resting position is an attribute on the group. Every keyframe has to
+   restate it: the moment CSS takes over the transform the attribute stops
+   applying, and an unstated translate means the origin. */
+.em-fit{transform:scale(0.57) translate(-287.5px,-204px)}
+.hero-art.playing .hero-emblem{animation:emblemIn 1s cubic-bezier(.2,.9,.35,1.12) 1.05s both,emblemFloat 9s ease-in-out 2.15s infinite}
+.hero-art.played  .hero-emblem{animation:emblemFloat 9s ease-in-out infinite}
+@keyframes emblemIn{
+  from{opacity:0;transform:translate(360px,126px) scale(.74)}
+  62%{opacity:1;transform:translate(360px,85px) scale(1.04)}
+  to{opacity:1;transform:translate(360px,90px) scale(1)}
+}
+@keyframes emblemFloat{0%,100%{transform:translate(360px,90px)}50%{transform:translate(360px,85px)}}
+
+/* the head keeps its own slow bob against the mark's drift, the way it does
+   in the header logo, so the heart and the head never move as one lump. The
+   two are deliberately out of step: 9s against 8s never quite repeats. */
+.em-head{animation:emBob 8s ease-in-out 1.2s infinite}
+@keyframes emBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* the brain blooms a piece at a time, then the folds draw themselves in */
+.cl{transform-box:fill-box;transform-origin:center}
+.hero-art.playing .cl{animation:cloudIn .5s cubic-bezier(.2,.9,.3,1.5) var(--in) both}
+@keyframes cloudIn{from{opacity:0;transform:scale(.35)}to{opacity:1;transform:scale(1)}}
+.c1{--in:1.98s}.c2{--in:2.04s}.c3{--in:2.10s}.c4{--in:2.16s}.c5{--in:2.22s}.c6{--in:1.98s}.c7{--in:2.30s}
+.hero-art.playing .gy{animation:drawGy .5s ease var(--in) both}
+@keyframes drawGy{from{stroke-dasharray:38;stroke-dashoffset:38}to{stroke-dasharray:38;stroke-dashoffset:0}}
+.g1{--in:2.40s}.g2{--in:2.48s}.g3{--in:2.56s}.g4{--in:2.64s}
 
 /* the white cross lands last, with a little spring */
 .chip-cross{transform-box:fill-box;transform-origin:center}
-.hero-art.playing .chip-cross{animation:crossIn .7s cubic-bezier(.2,.9,.3,1.5) 1.55s both}
+.hero-art.playing .chip-cross{animation:crossIn .7s cubic-bezier(.2,.9,.3,1.5) 1.9s both}
 @keyframes crossIn{from{opacity:0;transform:scale(.15) rotate(-30deg)}to{opacity:1;transform:scale(1) rotate(0)}}
-/* and then the heart keeps a resting pulse — two beats, then a long pause,
-   which is what a heartbeat actually looks like */
-.hero-art.playing .chip-heart-art{animation:beat 4.6s ease-in-out 2.6s infinite}
-.hero-art.played  .chip-heart-art{animation:beat 4.6s ease-in-out infinite}
-@keyframes beat{
-  0%,100%{transform:translate(-118.6px,-68.2px) scale(.48)}
-  7%{transform:translate(-118.6px,-68.2px) scale(.506)}
-  15%{transform:translate(-118.6px,-68.2px) scale(.48)}
-  23%{transform:translate(-118.6px,-68.2px) scale(.497)}
-  33%{transform:translate(-118.6px,-68.2px) scale(.48)}
-}
 
-/* ---- the brain draws itself, fold by fold ---- */
-.hero-art.playing .brain-body{animation:drawBrain .95s ease 2.15s both}
-@keyframes drawBrain{
-  from{stroke-dasharray:200;stroke-dashoffset:200;fill-opacity:0}
-  55%{fill-opacity:0}
-  to{stroke-dasharray:200;stroke-dashoffset:0;fill-opacity:1}
-}
-.hero-art.playing .brain-stem{animation:drawStem .5s ease 2.8s both}
-@keyframes drawStem{
-  from{stroke-dasharray:42;stroke-dashoffset:42;fill-opacity:0}
-  to{stroke-dasharray:42;stroke-dashoffset:0;fill-opacity:1}
-}
-.hero-art.playing .gy{animation:drawGy .55s ease var(--in) both}
-@keyframes drawGy{from{stroke-dasharray:36;stroke-dashoffset:36}to{stroke-dasharray:36;stroke-dashoffset:0}}
-.g1{--in:2.60s}.g2{--in:2.68s}.g3{--in:2.76s}.g4{--in:2.84s}.g5{--in:2.90s}
-
-/* a thought spark pops at the head of each fold, then keeps a slow pulse */
-.sp{transform-box:fill-box;transform-origin:center}
-.hero-art.playing .sp{animation:sparkIn .5s cubic-bezier(.2,.9,.3,1.6) var(--in) both,twinkle 5.2s ease-in-out calc(var(--in) + .8s) infinite}
-.hero-art.played  .sp{animation:twinkle 5.2s ease-in-out var(--t) infinite}
-@keyframes sparkIn{from{opacity:0;transform:scale(0)}to{opacity:.78;transform:scale(1)}}
-@keyframes twinkle{0%,100%{opacity:.28}50%{opacity:.85}}
-.sp1{--in:3.10s;--t:0s}.sp2{--in:3.18s;--t:.4s}.sp3{--in:3.26s;--t:.8s}.sp4{--in:3.34s;--t:1.2s}
 
 /* ---- the three people arrive ---- */
 .hero-art.playing .fig-a{animation:figInA .8s cubic-bezier(.2,.8,.3,1) .55s both}
@@ -1175,7 +1148,7 @@ html[data-motion="reduce"].js .page-head .rise h1::after{transform:scaleX(1);tra
         </div>
       </div>
 
-      <svg class="hero-art" id="heroArt" viewBox="0 0 720 470" role="img" aria-label="Illustration: two support workers in scrubs and a person using a wheelchair are waving hello. Floating beside them are two badges — a red heart carrying a white medical cross, and a brain — the marks for care of disability and mental health together.">
+      <svg class="hero-art" id="heroArt" viewBox="0 0 720 470" role="img" aria-label="Illustration: two support workers in scrubs and a person using a wheelchair are waving hello. Floating above them is our mark — a red heart carrying a white medical cross, resting against a head with a brain inside — for care of disability and mental health together.">
 <defs>
   <linearGradient id="gBack" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#F2FAF8"/><stop offset="1" stop-color="#CFE7E1"/>
@@ -1233,7 +1206,7 @@ html[data-motion="reduce"].js .page-head .rise h1::after{transform:scaleX(1);tra
   <ellipse cx="352" cy="204" rx="262" ry="176" fill="url(#gHalo)"/>
   <circle class="hero-ring" cx="360" cy="228" r="268" fill="none"
           stroke="#93C3BB" stroke-opacity=".5" stroke-width="2" stroke-dasharray="3 15"/>
-  <path class="hero-arc a1" d="M110 134a778 778 0 0 1 510 -2" fill="none"
+  <path class="hero-arc a1" d="M148 113a660 660 0 0 0 424 0" fill="none"
         stroke="#A8CFC8" stroke-opacity=".55" stroke-width="2.5" stroke-linecap="round"/>
   <ellipse cx="360" cy="428" rx="304" ry="20" fill="#B4D6CF" opacity=".65"/>
 </g>
@@ -1244,8 +1217,8 @@ html[data-motion="reduce"].js .page-head .rise h1::after{transform:scaleX(1);tra
     <circle class="mote m2" cx="690" cy="238" r="9"/>
     <circle class="mote m3" cx="664" cy="330" r="6"/>
     <circle class="mote m4" cx="46" cy="330" r="8"/>
-    <circle class="mote m5" cx="256" cy="66" r="5"/>
-    <circle class="mote m6" cx="470" cy="58" r="6"/>
+    <circle class="mote m5" cx="232" cy="122" r="5"/>
+    <circle class="mote m6" cx="486" cy="118" r="6"/>
   </g>
   <g stroke="#B02A37" stroke-width="6" stroke-linecap="round" opacity=".5" fill="none">
     <path class="mote m7" d="M204 62v22M194 73h20"/>
@@ -1254,42 +1227,32 @@ html[data-motion="reduce"].js .page-head .rise h1::after{transform:scaleX(1);tra
   </g>
 </g>
 
-<g class="hero-chips" aria-hidden="true">
-  <g class="chip chip-heart" transform="translate(110 134)">
-    <circle class="chip-disc" r="50" fill="url(#gChip)" filter="url(#fChip)"/>
-    <circle class="chip-rim" r="50" fill="none" stroke="#B02A37" stroke-opacity=".22"
-            stroke-width="2.5" stroke-dasharray="4 9"/>
-    <g class="chip-heart-art" transform="translate(-118.6 -68.2) scale(.48)">
-      <path d="M175 122c0-26 21-44 44-44 11 0 21 4 28 11 7-7 17-11 28-11 23 0 44 18 44 44 0 34-38 62-72 84-34-22-72-50-72-84z" fill="url(#gHeart)"/>
-      <path d="M219 78c-23 0-44 18-44 44 0 34 38 62 72 84-21-26-43-52-43-80 0-21 7-37 22-48h-7z" fill="#FFFFFF" opacity=".14"/>
-      <path class="chip-cross" d="M236 106h22v26h26v22h-26v26h-22v-26h-26v-22h26z" fill="#FFFFFF"/>
-    </g>
-  </g>
-  <g class="chip chip-mind" transform="translate(620 132)">
-    <circle class="chip-disc" r="46" fill="url(#gChip)" filter="url(#fChip)"/>
-    <circle r="38" fill="#EAF4F8"/>
-    <circle class="chip-rim" r="46" fill="none" stroke="#0E6A78" stroke-opacity=".22"
-            stroke-width="2.5" stroke-dasharray="4 9"/>
-    <g class="chip-brain-art">
-      <path class="brain-body" d="M-33-4c0-9 6-15 14-16 2-6 9-10 16-8 6-4 15-3 20 2 9 0 16 7 15 16 4 5 4 13 0 18 0 9-8 15-17 14-6 4-16 4-22 0-9 2-18-3-20-11-6-3-8-10-6-15z"
-            fill="url(#gBrain)" stroke="#2C7592" stroke-opacity=".5" stroke-width="2.4" stroke-linejoin="round"/>
-      <path class="brain-stem" d="M-5 21c0 5-3 8-7 9l13 2c-2-4-2-7-1-11z" fill="url(#gBrain)"
-            stroke="#2C7592" stroke-opacity=".45" stroke-width="2.2" stroke-linejoin="round"/>
-      <g class="brain-folds" fill="none" stroke="#2C7592" stroke-width="3.1"
-         stroke-linecap="round" stroke-opacity=".85">
-        <path class="gy g1" d="M-20-14c7 3 8 9 3 13-5 4-4 10 2 13"/>
-        <path class="gy g2" d="M-4-22c5 4 4 10-1 14-5 4-4 11 1 15"/>
-        <path class="gy g3" d="M13-19c6 4 5 10 0 14-5 4-3 11 3 14"/>
-        <path class="gy g4" d="M-27 3c6 1 9 5 8 11"/>
-        <path class="gy g5" d="M24 1c-6 1-9 5-8 11"/>
+<g class="hero-emblem" aria-hidden="true" transform="translate(360 90)">
+  <g filter="url(#fChip)">
+  <g class="em-fit">
+    <g class="em-head">
+      <path d="M330 78c-52 0-95 40-101 89l-33 50c-3 5 0 11 6 11h22v40c0 16 12 28 28 28h18v22q0 12 12 12h54q12 0 12-12v-46c30-21 52-56 52-95 0-55-25-99-70-99z" fill="#3E7D99"/>
+      <g class="em-brain">
+        <circle class="cl c1" cx="272" cy="140" r="24" fill="#FFFFFF"/>
+        <circle class="cl c2" cx="307" cy="126" r="26" fill="#FFFFFF"/>
+        <circle class="cl c3" cx="341" cy="142" r="23" fill="#FFFFFF"/>
+        <circle class="cl c4" cx="350" cy="172" r="21" fill="#FFFFFF"/>
+        <circle class="cl c5" cx="266" cy="172" r="21" fill="#FFFFFF"/>
+        <ellipse class="cl c6" cx="308" cy="160" rx="60" ry="44" fill="#FFFFFF"/>
+        <path class="cl c7" d="M262 190l-14 18 20 2z" fill="#FFFFFF"/>
+        <g class="em-folds" fill="none" stroke="#3E7D99" stroke-width="4.5" stroke-linecap="round">
+          <path class="gy g1" d="M272 148q11 12 1 26"/>
+          <path class="gy g2" d="M303 132q15 15 3 33"/>
+          <path class="gy g3" d="M334 150q10 11 1 24"/>
+          <path class="gy g4" d="M288 172q8 8 0 18"/>
+        </g>
       </g>
     </g>
-    <g class="em-sparks" fill="#0E6A78">
-      <circle class="sp sp1" cx="-20" cy="-14" r="3.2"/>
-      <circle class="sp sp2" cx="-4" cy="-22" r="3.2"/>
-      <circle class="sp sp3" cx="13" cy="-19" r="3.2"/>
-      <circle class="sp sp4" cx="-27" cy="3" r="3.2"/>
+    <g class="em-heart pulse-heart">
+      <path d="M175 122c0-26 21-44 44-44 11 0 21 4 28 11 7-7 17-11 28-11 23 0 44 18 44 44 0 34-38 62-72 84-34-22-72-50-72-84z" fill="#B02A37"/>
+      <path class="chip-cross" d="M236 106h22v26h26v22h-26v26h-22v-26h-26v-22h26z" fill="#fff"/>
     </g>
+  </g>
   </g>
 </g>
 
